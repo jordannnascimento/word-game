@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mystery Word Game</title>
+
+<style>
+    body {
+        background: #0d1117;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        background: #161b22;
+        padding: 30px 24px;
+        border-radius: 12px;
+        width: 420px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.08);
+    }
+
+    h1 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        text-align: center;
+        opacity: 0.8;
+        margin-bottom: 20px;
+    }
+
+    .intro {
+        font-size: 14px;
+        margin-bottom: 14px;
+        line-height: 1.5;
+        text-align: left;
+    }
+
+    .rules {
+        font-size: 13px;
+        margin-bottom: 20px;
+        opacity: 0.85;
+        text-align: left;
+        border-left: 3px solid #30363d;
+        padding-left: 10px;
+    }
+
+    .modes-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        text-align: left;
+        opacity: 0.9;
+    }
+
+    .modes {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .mode-btn {
+        flex: 1;
+        min-width: 90px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #30363d;
+        background: #21262d;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .mode-btn.active {
+        border-color: #2ea043;
+        background: #238636;
+    }
+
+    .mode-btn:hover {
+        background: #2b3138;
+    }
+
+    .current-mode {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 10px;
+        text-align: left;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 10px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+    }
+
+    button.guess-btn {
+        padding: 9px 18px;
+        background: #238636;
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    button.guess-btn:hover {
+        background: #2ea043;
+    }
+
+    .hint-box {
+        margin-top: 8px;
+        font-size: 24px;
+        letter-spacing: 4px;
+        text-align: center;
+        min-height: 32px;
+    }
+
+    .success {
+        margin-top: 12px;
+        font-size: 16px;
+        color: #00d26a;
+        text-align: left;
+    }
+
+    .explanation {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.5;
+        opacity: 0.9;
+        text-align: left;
+    }
+
+    .footer {
+        margin-top: 18px;
+        font-size: 11px;
+        opacity: 0.6;
+        text-align: left;
+    }
+
+    .footer code {
+        font-size: 11px;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Mystery Word Game</h1>
+    <div class="subtitle">
+        A small word-guessing experiment I built while learning to code.
+    </div>
+
+    <div class="intro">
+        Choose a mode and try to guess the hidden word.<br>
+        Each mode hides a different type of word.
+    </div>
+
+    <div class="rules">
+        <strong>How it works:</strong><br>
+        _ → letter is <strong>not in</strong> the word<br>
+        lowercase → letter is in the word, but in the <strong>wrong position</strong><br>
+        UPPERCASE → letter is in the <strong>correct position</strong>
+    </div>
+
+    <div class="modes-label">Pick a mode to start playing:</div>
+    <div class="modes">
+        <button class="mode-btn" id="mode-name"  onclick="setMode('name')">Name</button>
+        <button class="mode-btn" id="mode-music" onclick="setMode('music')">Music</button>
+        <button class="mode-btn" id="mode-legacy" onclick="setMode('legacy')">Legacy</button>
+    </div>
+
+    <div class="current-mode" id="currentModeLabel">
+        No mode selected. Choose a mode to start.
+    </div>
+
+    <input type="text" id="guessInput" placeholder="Choose a mode first..." disabled>
+    <div class="actions">
+        <button class="guess-btn" onclick="makeGuess()" id="guessButton" disabled>Guess</button>
+    </div>
+
+    <div class="hint-box" id="hintBox"></div>
+
+    <div class="success" id="successMessage"></div>
+    <div class="explanation" id="explanation"></div>
+
+    <div class="footer">
+        This web version was adapted from my original
+        <code>Python</code> console game.
+    </div>
+</div>
+
+<script>
+    const modes = {
+        name: {
+            secret: "emily",
+            display: "Name",
+            explanation: `
+                <strong>Who is “EMILY”?</strong><br>
+                Emily is the current vocalist performing with Linkin Park on tour.<br><br>
+                <em>This project began as a Python console game before being remade for the web.</em>
+            `
+        },
+        music: {
+            secret: "numb",
+            display: "Music",
+            explanation: `
+                <strong>Why “NUMB”?</strong><br>
+                One of the most iconic Linkin Park songs, representing emotion and connection.<br><br>
+                <em>A tribute to the band's musical legacy.</em>
+            `
+        },
+        legacy: {
+            secret: "chester",
+            display: "Legacy",
+            explanation: `
+                <strong>Why “CHESTER”?</strong><br>
+                Chester Bennington was one of the most influential voices in modern rock,
+                shaping the soul of Linkin Park.<br><br>
+                <em>This mode honors his impact and legacy.</em>
+            `
+        }
+    };
+
+    let currentMode = null;
+    let secret = "";
+    let secretLength = 0;
+    let guessCount = 0;
+    let extraHintShown = false;
+
+    const guessInput = document.getElementById("guessInput");
+    const guessButton = document.getElementById("guessButton");
+    const hintBox = document.getElementById("hintBox");
+    const successMessage = document.getElementById("successMessage");
+    const explanation = document.getElementById("explanation");
+    const currentModeLabel = document.getElementById("currentModeLabel");
+
+    function setMode(modeKey) {
+        currentMode = modes[modeKey];
+        secret = currentMode.secret;
+        secretLength = secret.length;
+        guessCount = 0;
+        extraHintShown = false;
+
+        document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
+        document.getElementById("mode-" + modeKey).classList.add("active");
+
+        currentModeLabel.textContent =
+            currentMode.display + " — " + secretLength + " letters.";
+
+        guessInput.disabled = false;
+        guessButton.disabled = false;
+        guessInput.placeholder = `Type your ${secretLength}-letter guess...`;
+        guessInput.value = "";
+        guessInput.maxLength = secretLength;
+        guessInput.focus();
+
+        successMessage.innerHTML = "";
+        explanation.innerHTML = "";
+
+        let underscores = Array(secretLength).fill("_").join(" ");
+        hintBox.innerHTML = underscores;
+    }
+
+    function makeGuess() {
+        if (!currentMode) {
+            alert("Choose a mode first.");
+            return;
+        }
+
+        let guess = guessInput.value.toLowerCase();
+
+        if (guess.length !== secretLength) {
+            alert("Your guess must have " + secretLength + " letters.");
+            return;
+        }
+
+        guessCount++;
+
+        if (guess === secret) {
+            hintBox.innerHTML = guess.toUpperCase().split("").join(" ");
+            successMessage.innerHTML =
+                "🎉 Congratulations! You guessed it in " + guessCount + " tries!";
+            explanation.innerHTML = currentMode.explanation;
+
+            guessInput.disabled = true;
+            guessButton.disabled = true;
+            return;
+        }
+
+        let hint = "";
+        for (let i = 0; i < secretLength; i++) {
+            if (guess[i] === secret[i]) {
+                hint += guess[i].toUpperCase() + " ";
+            } else if (secret.includes(guess[i])) {
+                hint += guess[i].toLowerCase() + " ";
+            } else {
+                hint += "_ ";
+            }
+        }
+
+        hintBox.innerHTML = hint.trim();
+        guessInput.value = "";
+
+        if (!extraHintShown && guessCount >= 20) {
+            explanation.innerHTML = `
+                <strong>Hint:</strong> All secret words are related to the same band: Linkin Park.
+            `;
+            extraHintShown = true;
+        } else if (!extraHintShown) {
+            explanation.innerHTML = "";
+        }
+
+        guessInput.focus();
+    }
+
+    guessInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            makeGuess();
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
+
